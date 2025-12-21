@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle of the Books - Jeopardy Study Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e7a1e 0%, #2d5c2d 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 3px solid white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+        
+        .game-board {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .category-header {
+            background: #1e7a1e;
+            color: white;
+            padding: 20px 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-radius: 8px;
+            border: 3px solid #145214;
+        }
+        
+        .questions-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            grid-auto-rows: auto;
+        }
+        
+        .question-cell {
+            background: #1e7a1e;
+            color: white;
+            padding: 40px 10px;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid #145214;
+        }
+        
+        .question-cell:hover {
+            background: #2d9e2d;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .question-cell.answered {
+            background: #8c8c8c;
+            color: #d3d3d3;
+            cursor: not-allowed;
+            border-color: #666;
+        }
+        
+        .question-cell.answered:hover {
+            transform: none;
+            background: #8c8c8c;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            border: 5px solid #1e7a1e;
+        }
+        
+        .modal-header {
+            background: #1e7a1e;
+            color: white;
+            padding: 20px;
+            margin: -40px -40px 30px -40px;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .modal-header h2 {
+            font-size: 2em;
+            text-align: center;
+        }
+        
+        .question-text {
+            font-size: 1.5em;
+            margin: 30px 0;
+            padding: 30px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border-left: 5px solid #1e7a1e;
+        }
+        
+        .answer-section {
+            margin-top: 30px;
+        }
+        
+        .show-answer-btn, .close-btn {
+            background: #1e7a1e;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        
+        .show-answer-btn:hover, .close-btn:hover {
+            background: #2d9e2d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .answer-text {
+            display: none;
+            font-size: 1.3em;
+            margin: 20px 0;
+            padding: 25px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            border: 3px solid #1e7a1e;
+            font-weight: bold;
+        }
+        
+        .answer-text.show {
+            display: block;
+        }
+        
+        .book-list {
+            background: #e8f5e8;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border: 3px solid #1e7a1e;
+        }
+        
+        .book-list h2 {
+            color: #1e7a1e;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .book-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 5px solid #1e7a1e;
+            font-size: 1.1em;
+        }
+        
+        .score-board {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 3px solid #1e7a1e;
+        }
+        
+        .score-board h3 {
+            color: #1e7a1e;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        .score {
+            font-size: 2em;
+            color: #1e7a1e;
+            font-weight: bold;
+        }
+        
+        .reset-btn {
+            background: #8c8c8c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .reset-btn:hover {
+            background: #666;
+        }
+        
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #1e7a1e;
+        }
+        
+        .instructions h3 {
+            color: #1e7a1e;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            margin-left: 25px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .answer-options {
+            display: grid;
+            gap: 12px;
+            margin: 25px 0;
+        }
+        
+        .answer-option {
+            background: white;
+            border: 3px solid #1e7a1e;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+            position: relative;
+            padding-left: 50px;
+        }
+        
+        .answer-option input[type="radio"] {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .answer-option:hover {
+            background: #e8f5e8;
+            transform: translateX(5px);
+        }
+        
+        .answer-option.correct {
+            background: #90EE90;
+            border-color: #2d5c2d;
+            font-weight: bold;
+        }
+        
+        .answer-option.incorrect {
+            background: #FFB6C6;
+            border-color: #8c0000;
+        }
+        
+        .result-message {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .result-message.show {
+            display: block;
+        }
+        
+        .result-message.correct-answer {
+            background: #90EE90;
+            color: #2d5c2d;
+        }
+        
+        .result-message.incorrect-answer {
+            background: #FFB6C6;
+            color: #8c0000;
+        }
+        
+        .submit-btn {
+            background: #1e7a1e;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 15px 5px;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: #2d9e2d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .submit-btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+        
+        .close-btn {
+            background: #8c8c8c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 15px 5px;
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            background: #666;
+            transform: translateY(-2px);
+        }
+        
+        .score-details {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #1e7a1e;
+        }
+        
+        @media (max-width: 1024px) {
+            .categories, .questions-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .categories, .questions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .question-cell {
+                padding: 30px 10px;
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⭐ BATTLE OF THE BOOKS ⭐</h1>
+            <p>Jeopardy-Style Study Guide - MULTIPLE CHOICE</p>
+            <p>2025-2026 Season</p>
+        </div>
+        
+        <div class="score-board">
+            <h3>Team Score</h3>
+            <div class="score" id="score">0</div>
+            <div class="score-details">
+                <p>Correct: <span id="correctCount">0</span> / Total: <span id="totalCount">0</span></p>
+            </div>
+            <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>📚 How to Play:</h3>
+            <ul>
+                <li>Click on any point value to reveal a question</li>
+                <li>Select the correct answer from 4 multiple choice options</li>
+                <li>Click "Submit Answer" to check your answer</li>
+                <li>Correct answers add points to your score</li>
+                <li>Answered questions will be grayed out</li>
+                <li>Learn from incorrect answers - the correct answer is highlighted</li>
+            </ul>
+        </div>
+        
+        <div class="game-board">
+            <div class="categories">
+                <div class="category-header">CHARACTERS</div>
+                <div class="category-header">MAGICAL WORLDS</div>
+                <div class="category-header">FAMILY & FRIENDS</div>
+                <div class="category-header">ADVENTURES & JOURNEYS</div>
+                <div class="category-header">MYSTERIES & SECRETS</div>
+                <div class="category-header">SPECIAL PLACES</div>
+            </div>
+            
+            <div class="questions-grid" id="questionsGrid"></div>
+        </div>
+        
+        <div class="book-list">
+            <h2>📖 2025-2026 Book List</h2>
+            <div class="book-item">1. <strong>Arlo Finch in the Valley of Fire</strong> by John August</div>
+            <div class="book-item">2. <strong>Moongarden</strong> by Michelle A. Barry</div>
+            <div class="book-item">3. <strong>James and the Giant Peach</strong> by Roald Dahl</div>
+            <div class="book-item">4. <strong>Final Word</strong> by Janet Sumner Johnson</div>
+            <div class="book-item">5. <strong>Ghost Book</strong> by Remy Lai</div>
+            <div class="book-item">6. <strong>Ruby Lost and Found</strong> by Christina Li</div>
+            <div class="book-item">7. <strong>A Long Walk to Water</strong> by Linda Sue Park</div>
+            <div class="book-item">8. <strong>The Lost Library</strong> by Rebecca Stead and Wendy Mass</div>
+            <div class="book-item">9. <strong>Codename Zero</strong> by Chris Rylander</div>
+            <div class="book-item">10. <strong>Greenwild</strong> by Pari Thomson</div>
+        </div>
+    </div>
+    
+    <div class="modal" id="questionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+            </div>
+            <div class="question-text" id="questionText"></div>
+            <div class="answer-section">
+                <div class="answer-options" id="answersContainer"></div>
+                <div class="result-message" id="resultMessage"></div>
+                <div style="text-align: center;">
+                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit Answer</button>
+                    <button class="close-btn" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const gameData = {
+            "CHARACTERS": {
+                "100": {
+                    "question": "In which book does an eleven-year-old boy named Arlo join the Rangers and learn about wild magic?",
+                    "options": [
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Codename Zero by Chris Rylander",
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ruby Lost and Found by Christina Li"
+                    ],
+                    "correct": 0
+                },
+                "200": {
+                    "question": "What is James's full name?",
+                    "options": [
+                        "James Henry Trotter",
+                        "James Michael Trotter",
+                        "James Edward Trotter",
+                        "James William Trotter"
+                    ],
+                    "correct": 0
+                },
+                "300": {
+                    "question": "In which book does July Chen see ghosts and meets a boy named William who is stuck between life and death?",
+                    "options": [
+                        "Ghost Book by Remy Lai",
+                        "Greenwild by Pari Thomson",
+                        "The Lost Library by Rebecca Stead",
+                        "Moongarden by Michelle A. Barry"
+                    ],
+                    "correct": 0
+                },
+                "400": {
+                    "question": "In which book do twins named Hope and Gordon Smith enter a spelling bee to save their family from eviction?",
+                    "options": [
+                        "Final Word by Janet Sumner Johnson",
+                        "Ruby Lost and Found by Christina Li",
+                        "Codename Zero by Chris Rylander",
+                        "Arlo Finch in the Valley of Fire by John August"
+                    ],
+                    "correct": 0
+                },
+                "500": {
+                    "question": "In which book does Salva Dut become one of the Lost Boys of Sudan?",
+                    "options": [
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ghost Book by Remy Lai",
+                        "The Lost Library by Rebecca Stead",
+                        "Ruby Lost and Found by Christina Li"
+                    ],
+                    "correct": 0
+                },
+                "600": {
+                    "question": "What is Daisy Thistledown's special ability in Greenwild?",
+                    "options": [
+                        "She can communicate with magical creatures",
+                        "She can heal wounds with magic",
+                        "She can see the true nature of things",
+                        "She can control plant growth"
+                    ],
+                    "correct": 2
+                },
+                "700": {
+                    "question": "In Codename Zero, what is the main character's secret mission?",
+                    "options": [
+                        "To find a hidden treasure",
+                        "To stop a group of spies",
+                        "To rescue a kidnapped scientist",
+                        "To decode enemy messages"
+                    ],
+                    "correct": 3
+                },
+                "800": {
+                    "question": "What is the name of the ghost who helps July in Ghost Book?",
+                    "options": [
+                        "Marcus",
+                        "William",
+                        "Henry",
+                        "Samuel"
+                    ],
+                    "correct": 1
+                },
+                "900": {
+                    "question": "In Final Word, what do the Smith twins discover about their grandmother?",
+                    "options": [
+                        "She was a famous author",
+                        "She worked for the Wintertons",
+                        "She hid a secret dictionary",
+                        "She was a spelling champion"
+                    ],
+                    "correct": 0
+                },
+                "1000": {
+                    "question": "What is Mortimer's role in The Lost Library?",
+                    "options": [
+                        "He is a magical being guarding the library",
+                        "He is an orange cat that guards the library",
+                        "He is the librarian's assistant",
+                        "He is a character from another world"
+                    ],
+                    "correct": 1
+                }
+            },
+            "MAGICAL WORLDS": {
+                "100": {
+                    "question": "In which book does a character discover a hidden world called the Greenwild through a doorway at Kew Gardens?",
+                    "options": [
+                        "Greenwild by Pari Thomson",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Moongarden by Michelle A. Barry",
+                        "The Lost Library by Rebecca Stead"
+                    ],
+                    "correct": 0
+                },
+                "200": {
+                    "question": "In which book does a character attend an elite private school on the moon and discover a hidden garden with toxic plants?",
+                    "options": [
+                        "Moongarden by Michelle A. Barry",
+                        "Codename Zero by Chris Rylander",
+                        "Ruby Lost and Found by Christina Li",
+                        "Final Word by Janet Sumner Johnson"
+                    ],
+                    "correct": 0
+                },
+                "300": {
+                    "question": "In which book does a character learn about the Long Woods, a parallel realm of wonder and danger?",
+                    "options": [
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Greenwild by Pari Thomson",
+                        "Ghost Book by Remy Lai",
+                        "Moongarden by Michelle A. Barry"
+                    ],
+                    "correct": 0
+                },
+                "400": {
+                    "question": "In which book do characters encounter Cloud-Men who are responsible for weather phenomena?",
+                    "options": [
+                        "James and the Giant Peach by Roald Dahl",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Codename Zero by Chris Rylander",
+                        "A Long Walk to Water by Linda Sue Park"
+                    ],
+                    "correct": 0
+                },
+                "500": {
+                    "question": "In which book does a mysterious Little Free Library appear overnight, guarded by an orange cat named Mortimer?",
+                    "options": [
+                        "The Lost Library by Rebecca Stead and Wendy Mass",
+                        "Ruby Lost and Found by Christina Li",
+                        "Final Word by Janet Sumner Johnson",
+                        "Ghost Book by Remy Lai"
+                    ],
+                    "correct": 0
+                },
+                "600": {
+                    "question": "What magical ability does Arlo discover in the Long Woods?",
+                    "options": [
+                        "The ability to manipulate time",
+                        "The ability to communicate with animals",
+                        "Wild magic that Rangers can harness",
+                        "The ability to become invisible"
+                    ],
+                    "correct": 2
+                },
+                "700": {
+                    "question": "What dangerous plant does Sage find in the hidden garden at S.L.A.M Academy?",
+                    "options": [
+                        "Moonflowers that glow in the dark",
+                        "Plants that can read minds",
+                        "Toxic plants that can kill",
+                        "Plants that grant wishes"
+                    ],
+                    "correct": 2
+                },
+                "800": {
+                    "question": "In which realm do the events of Ghost Book primarily take place?",
+                    "options": [
+                        "The spirit world between life and death",
+                        "A magical Asian underworld",
+                        "During Hungry Ghost month in the mortal world",
+                        "A hidden ghost kingdom"
+                    ],
+                    "correct": 1
+                },
+                "900": {
+                    "question": "What special item does Ruby find that leads her on a scavenger hunt?",
+                    "options": [
+                        "An old map",
+                        "Ye-Ye's scavenger hunts with clues",
+                        "A mysterious key",
+                        "A hidden diary"
+                    ],
+                    "correct": 1
+                },
+                "1000": {
+                    "question": "What is unique about the insects in the Greenwild forest?",
+                    "options": [
+                        "They are enormous and intelligent",
+                        "They are made of light",
+                        "They communicate with humans",
+                        "They guard the magical doorway"
+                    ],
+                    "correct": 0
+                }
+            },
+            "FAMILY & FRIENDS": {
+                "100": {
+                    "question": "In which book does Ruby Chu spend the summer with her Nai-Nai (grandmother) in San Francisco's Chinatown?",
+                    "options": [
+                        "Ruby Lost and Found by Christina Li",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "The Lost Library by Rebecca Stead",
+                        "Greenwild by Pari Thomson"
+                    ],
+                    "correct": 0
+                },
+                "200": {
+                    "question": "In which book does a character move to Pine Mountain, Colorado to live with Uncle Wade?",
+                    "options": [
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ghost Book by Remy Lai",
+                        "Codename Zero by Chris Rylander"
+                    ],
+                    "correct": 0
+                },
+                "300": {
+                    "question": "In which book does Nya walk for hours each day to fetch water for her family?",
+                    "options": [
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ruby Lost and Found by Christina Li",
+                        "Moongarden by Michelle A. Barry",
+                        "The Lost Library by Rebecca Stead"
+                    ],
+                    "correct": 0
+                },
+                "400": {
+                    "question": "In which book do characters learn about their wealthy relatives, the Wintertons, who are dictionary magnates?",
+                    "options": [
+                        "Final Word by Janet Sumner Johnson",
+                        "Ruby Lost and Found by Christina Li",
+                        "Codename Zero by Chris Rylander",
+                        "Greenwild by Pari Thomson"
+                    ],
+                    "correct": 0
+                },
+                "500": {
+                    "question": "In which book does Daisy Thistledown search for her missing mother who has been keeping big secrets?",
+                    "options": [
+                        "Greenwild by Pari Thomson",
+                        "The Lost Library by Rebecca Stead",
+                        "Moongarden by Michelle A. Barry",
+                        "Final Word by Janet Sumner Johnson"
+                    ],
+                    "correct": 0
+                },
+                "600": {
+                    "question": "What does Ruby's grandmother teach her during the summer?",
+                    "options": [
+                        "Chinese cooking and family history",
+                        "How to speak fluent Cantonese",
+                        "About their family's textile business",
+                        "Traditional Chinese medicine"
+                    ],
+                    "correct": 0
+                },
+                "700": {
+                    "question": "How many siblings does Salva have in A Long Walk to Water?",
+                    "options": [
+                        "One brother",
+                        "Two brothers and one sister",
+                        "Three sisters",
+                        "No siblings"
+                    ],
+                    "correct": 1
+                },
+                "800": {
+                    "question": "Who is Nya's mother in A Long Walk to Water?",
+                    "options": [
+                        "A healer in the village",
+                        "The village chief's wife",
+                        "A water carrier like Nya",
+                        "A teacher at school"
+                    ],
+                    "correct": 0
+                },
+                "900": {
+                    "question": "What family secret does Arlo uncover involving his mother?",
+                    "options": [
+                        "She was a Ranger like him",
+                        "She works with the magical Council",
+                        "She knows about the Long Woods",
+                        "She is from another world"
+                    ],
+                    "correct": 2
+                },
+                "1000": {
+                    "question": "In Ghost Book, what does July learn about her grandmother's past?",
+                    "options": [
+                        "She was a ghost hunter",
+                        "She knew ghosts and helped them find peace",
+                        "She was trapped by a ghost",
+                        "She could see into the spirit world"
+                    ],
+                    "correct": 1
+                }
+            },
+            "ADVENTURES & JOURNEYS": {
+                "100": {
+                    "question": "In which book does a peach roll through towns and crash through a chocolate factory before reaching the sea?",
+                    "options": [
+                        "James and the Giant Peach by Roald Dahl",
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ruby Lost and Found by Christina Li",
+                        "Codename Zero by Chris Rylander"
+                    ],
+                    "correct": 0
+                },
+                "200": {
+                    "question": "In which book does a character walk for years across dangerous terrain to reach refugee camps in Ethiopia and Kenya?",
+                    "options": [
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "The Lost Library by Rebecca Stead",
+                        "Ghost Book by Remy Lai"
+                    ],
+                    "correct": 0
+                },
+                "300": {
+                    "question": "In which book do characters embark on a quest to return a wandering soul to his body during Hungry Ghost month?",
+                    "options": [
+                        "Ghost Book by Remy Lai",
+                        "Final Word by Janet Sumner Johnson",
+                        "Greenwild by Pari Thomson",
+                        "Moongarden by Michelle A. Barry"
+                    ],
+                    "correct": 0
+                },
+                "400": {
+                    "question": "In which book does a spy-themed adventure involve middle school students?",
+                    "options": [
+                        "Codename Zero by Chris Rylander",
+                        "Ruby Lost and Found by Christina Li",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "The Lost Library by Rebecca Stead"
+                    ],
+                    "correct": 0
+                },
+                "500": {
+                    "question": "In which book does a character retrace her Ye-Ye's scavenger hunts through San Francisco?",
+                    "options": [
+                        "Ruby Lost and Found by Christina Li",
+                        "Greenwild by Pari Thomson",
+                        "Moongarden by Michelle A. Barry",
+                        "Final Word by Janet Sumner Johnson"
+                    ],
+                    "correct": 0
+                },
+                "600": {
+                    "question": "What creatures help James during his journey on the giant peach?",
+                    "options": [
+                        "Magical insects with human-like qualities",
+                        "Flying birds from distant lands",
+                        "Ocean creatures",
+                        "Mythical monsters"
+                    ],
+                    "correct": 0
+                },
+                "700": {
+                    "question": "What major obstacle does Salva face during his journey to the refugee camps?",
+                    "options": [
+                        "Extreme heat and dehydration in the desert",
+                        "Dangerous wild animals constantly attacking",
+                        "Betrayal by his friends",
+                        "Getting captured by soldiers"
+                    ],
+                    "correct": 0
+                },
+                "800": {
+                    "question": "In Arlo Finch, what dangerous situation does Arlo help rescue his friend Katie from?",
+                    "options": [
+                        "A burning forest fire",
+                        "A dangerous canyon",
+                        "She is trapped in the Shadowkind's world",
+                        "She is lost in a snowstorm"
+                    ],
+                    "correct": 2
+                },
+                "900": {
+                    "question": "What adventure does Daisy undertake to save the Greenwild?",
+                    "options": [
+                        "She journeys through the magical doorway",
+                        "She travels through the forest and beyond the boundary",
+                        "She learns to control ancient magic",
+                        "She discovers a hidden path to safety"
+                    ],
+                    "correct": 1
+                },
+                "1000": {
+                    "question": "How do the characters in The Lost Library ultimately try to save it from destruction?",
+                    "options": [
+                        "They find the original library's blueprints",
+                        "They work to rebuild it and uncover its secrets",
+                        "They convince the town to protect it",
+                        "They move it to a safe location"
+                    ],
+                    "correct": 1
+                }
+            },
+            "MYSTERIES & SECRETS": {
+                "100": {
+                    "question": "In which book does a character discover clues about a fire that destroyed the town library 20 years ago?",
+                    "options": [
+                        "The Lost Library by Rebecca Stead and Wendy Mass",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Ruby Lost and Found by Christina Li",
+                        "Final Word by Janet Sumner Johnson"
+                    ],
+                    "correct": 0
+                },
+                "200": {
+                    "question": "In which book does a character see a mysterious girl named Katie Cunningham who has been missing?",
+                    "options": [
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Greenwild by Pari Thomson",
+                        "The Lost Library by Rebecca Stead",
+                        "Moongarden by Michelle A. Barry"
+                    ],
+                    "correct": 0
+                },
+                "300": {
+                    "question": "In which book do characters participate in a clue hunt throughout a manor to find a hidden fortune?",
+                    "options": [
+                        "Final Word by Janet Sumner Johnson",
+                        "Ruby Lost and Found by Christina Li",
+                        "Codename Zero by Chris Rylander",
+                        "Ghost Book by Remy Lai"
+                    ],
+                    "correct": 0
+                },
+                "400": {
+                    "question": "In which book does a character try to save May's Bakery from being shut down due to gentrification?",
+                    "options": [
+                        "Ruby Lost and Found by Christina Li",
+                        "Moongarden by Michelle A. Barry",
+                        "The Lost Library by Rebecca Stead",
+                        "Greenwild by Pari Thomson"
+                    ],
+                    "correct": 0
+                },
+                "500": {
+                    "question": "In which book does a character uncover the truth about who she really is while trying to save a magical world?",
+                    "options": [
+                        "Greenwild by Pari Thomson",
+                        "Final Word by Janet Sumner Johnson",
+                        "Moongarden by Michelle A. Barry",
+                        "The Lost Library by Rebecca Stead"
+                    ],
+                    "correct": 0
+                },
+                "600": {
+                    "question": "Who was responsible for the library fire in The Lost Library?",
+                    "options": [
+                        "An accident from careless visitors",
+                        "Arson by someone with a grudge",
+                        "A historical mystery still unsolved",
+                        "A deliberate act to cover up secrets"
+                    ],
+                    "correct": 2
+                },
+                "700": {
+                    "question": "What secret is Katie hiding in Arlo Finch?",
+                    "options": [
+                        "She is not what she appears to be",
+                        "She can enter the Long Woods",
+                        "She is a Ranger in training",
+                        "She knows about Arlo's family secret"
+                    ],
+                    "correct": 0
+                },
+                "800": {
+                    "question": "What hidden fortune are the characters searching for in Final Word?",
+                    "options": [
+                        "A valuable dictionary collection",
+                        "Rare books and documents",
+                        "Gold and jewels",
+                        "A hidden deed to property"
+                    ],
+                    "correct": 0
+                },
+                "900": {
+                    "question": "In Ghost Book, what secret does the ghost William keep from July at first?",
+                    "options": [
+                        "How he died",
+                        "His true identity",
+                        "Where he is trapped",
+                        "What he wants help with"
+                    ],
+                    "correct": 1
+                },
+                "1000": {
+                    "question": "What is the biggest secret that Daisy discovers about herself in Greenwild?",
+                    "options": [
+                        "She has magical powers",
+                        "She is half human, half magical creature",
+                        "She is the key to saving the Greenwild",
+                        "She was born in the magical world"
+                    ],
+                    "correct": 2
+                }
+            },
+            "SPECIAL PLACES": {
+                "100": {
+                    "question": "In which book does the story take place in Pine Mountain, Colorado?",
+                    "options": [
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ruby Lost and Found by Christina Li",
+                        "Moongarden by Michelle A. Barry"
+                    ],
+                    "correct": 0
+                },
+                "200": {
+                    "question": "In which book does a giant peach land on top of the Empire State Building in New York City?",
+                    "options": [
+                        "James and the Giant Peach by Roald Dahl",
+                        "Codename Zero by Chris Rylander",
+                        "The Lost Library by Rebecca Stead",
+                        "Final Word by Janet Sumner Johnson"
+                    ],
+                    "correct": 0
+                },
+                "300": {
+                    "question": "In which book is a school built in Southern Sudan along with a water well?",
+                    "options": [
+                        "A Long Walk to Water by Linda Sue Park",
+                        "Ghost Book by Remy Lai",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "Ruby Lost and Found by Christina Li"
+                    ],
+                    "correct": 0
+                },
+                "400": {
+                    "question": "In which book does the setting include Winterton Manor?",
+                    "options": [
+                        "Final Word by Janet Sumner Johnson",
+                        "Moongarden by Michelle A. Barry",
+                        "The Lost Library by Rebecca Stead",
+                        "Greenwild by Pari Thomson"
+                    ],
+                    "correct": 0
+                },
+                "500": {
+                    "question": "In which book does the story take place partly on the moon at an elite private school?",
+                    "options": [
+                        "Moongarden by Michelle A. Barry",
+                        "Codename Zero by Chris Rylander",
+                        "Arlo Finch in the Valley of Fire by John August",
+                        "The Lost Library by Rebecca Stead"
+                    ],
+                    "correct": 0
+                },
+                "600": {
+                    "question": "What is special about the Valley of Fire location in Arlo Finch?",
+                    "options": [
+                        "It is a gateway to the magical Long Woods",
+                        "It contains rare burning rocks",
+                        "It is home to ancient Native American artifacts",
+                        "It is where Arlo's father disappeared"
+                    ],
+                    "correct": 0
+                },
+                "700": {
+                    "question": "Where does Ruby's grandmother live that is important to the story?",
+                    "options": [
+                        "In San Francisco's Chinatown",
+                        "On a farm outside the city",
+                        "In a traditional Chinese village",
+                        "In an old mansion downtown"
+                    ],
+                    "correct": 0
+                },
+                "800": {
+                    "question": "What important location does July visit in Ghost Book?",
+                    "options": [
+                        "Her grandmother's grave and shrine",
+                        "An ancient Asian temple",
+                        "The local museum",
+                        "A famous ghost house"
+                    ],
+                    "correct": 0
+                },
+                "900": {
+                    "question": "Where is Kew Gardens located that is important in Greenwild?",
+                    "options": [
+                        "In England",
+                        "In Scotland",
+                        "In Wales",
+                        "In Ireland"
+                    ],
+                    "correct": 0
+                },
+                "1000": {
+                    "question": "What unique place does Daisy discover at the heart of the Greenwild?",
+                    "options": [
+                        "An ancient library of magic",
+                        "A hidden settlement of magical beings",
+                        "A sacred grove with ancient trees",
+                        "An entrance to another realm"
+                    ],
+                    "correct": 2
+                }
+            }
+        };
+        
+        let score = 0;
+        let answeredQuestions = new Set();
+        let currentQuestion = null;
+        let selectedOption = null;
+        let answered = false;
+        
+        function initializeGame() {
+            const grid = document.getElementById('questionsGrid');
+            const categories = Object.keys(gameData);
+            const points = ['100', '200', '300', '400', '500', '600', '700', '800', '900', '1000'];
+            
+            points.forEach(point => {
+                categories.forEach(category => {
+                    const cell = document.createElement('div');
+                    cell.className = 'question-cell';
+                    cell.textContent = '$' + point;
+                    cell.onclick = () => openQuestion(category, point);
+                    cell.dataset.category = category;
+                    cell.dataset.points = point;
+                    grid.appendChild(cell);
+                });
+            });
+            
+            loadGameState();
+        }
+        
+        function openQuestion(category, points) {
+            const questionId = category + '-' + points;
+            if (answeredQuestions.has(questionId)) return;
+            
+            currentQuestion = { category, points, id: questionId };
+            selectedOption = null;
+            answered = false;
+            const data = gameData[category][points];
+            
+            document.getElementById('modalTitle').textContent = category + ' - $' + points;
+            document.getElementById('questionText').textContent = data.question;
+            document.getElementById('resultMessage').classList.remove('show', 'correct-answer', 'incorrect-answer');
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').textContent = 'Submit Answer';
+            
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            
+            data.options.forEach((option, index) => {
+                const label = document.createElement('label');
+                label.className = 'answer-option';
+                label.innerHTML = `
+                    <input type="radio" name="answer" value="${index}">
+                    ${option}
+                `;
+                label.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        const radio = label.querySelector('input');
+                        radio.checked = true;
+                        selectedOption = index;
+                    } else {
+                        selectedOption = index;
+                    }
+                };
+                container.appendChild(label);
+            });
+            
+            document.getElementById('questionModal').style.display = 'flex';
+        }
+        
+        function submitAnswer() {
+            if (selectedOption === null) {
+                alert('Please select an answer!');
+                return;
+            }
+            
+            if (answered) {
+                closeModal();
+                return;
+            }
+            
+            answered = true;
+            const data = gameData[currentQuestion.category][currentQuestion.points];
+            const resultMsg = document.getElementById('resultMessage');
+            const options = document.querySelectorAll('.answer-option');
+            
+            // Disable all radio buttons
+            document.querySelectorAll('input[name="answer"]').forEach(radio => {
+                radio.disabled = true;
+            });
+            
+            options.forEach((option, index) => {
+                if (index === data.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedOption && selectedOption !== data.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            const isCorrect = selectedOption === data.correct;
+            
+            if (isCorrect) {
+                score += parseInt(currentQuestion.points);
+                resultMsg.textContent = '✅ Correct! You earned $' + currentQuestion.points;
+                resultMsg.classList.add('correct-answer');
+            } else {
+                resultMsg.textContent = '❌ Incorrect. The correct answer is: ' + data.options[data.correct];
+                resultMsg.classList.add('incorrect-answer');
+            }
+            
+            answeredQuestions.add(currentQuestion.id);
+            markQuestionAnswered(currentQuestion.category, currentQuestion.points);
+            
+            resultMsg.classList.add('show');
+            document.getElementById('submitBtn').textContent = 'Close';
+            document.getElementById('submitBtn').disabled = false;
+            
+            updateDisplay();
+            saveGameState();
+        }
+        
+        function markQuestionAnswered(category, points) {
+            const cells = document.querySelectorAll('.question-cell');
+            cells.forEach(cell => {
+                if (cell.dataset.category === category && cell.dataset.points === points) {
+                    cell.classList.add('answered');
+                }
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('questionModal').style.display = 'none';
+        }
+        
+        function resetGame() {
+            if (confirm('Are you sure you want to reset the game? This will clear all progress.')) {
+                score = 0;
+                answeredQuestions.clear();
+                document.getElementById('score').textContent = '0';
+                document.querySelectorAll('.question-cell').forEach(cell => {
+                    cell.classList.remove('answered');
+                });
+                saveGameState();
+            }
+        }
+        
+        function saveGameState() {
+            localStorage.setItem('botbScore', score);
+            localStorage.setItem('botbAnswered', JSON.stringify([...answeredQuestions]));
+        }
+        
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+        }
+        
+        function loadGameState() {
+            const savedScore = localStorage.getItem('botbScore');
+            const savedAnswered = localStorage.getItem('botbAnswered');
+            
+            if (savedScore) {
+                score = parseInt(savedScore);
+                document.getElementById('score').textContent = score;
+            }
+            
+            if (savedAnswered) {
+                answeredQuestions = new Set(JSON.parse(savedAnswered));
+                answeredQuestions.forEach(id => {
+                    const [category, points] = id.split('-');
+                    markQuestionAnswered(category, points);
+                });
+            }
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('questionModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        initializeGame();
+    </script>
+</body>
+</html>
