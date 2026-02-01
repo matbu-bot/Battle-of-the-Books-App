@@ -1209,11 +1209,15 @@
             
             // Optimize: only modify the correct and selected options
             const correctOption = options[data.correct];
-            correctOption.classList.add('correct');
+            if (correctOption) {
+                correctOption.classList.add('correct');
+            }
             
             if (selectedOption !== data.correct) {
                 const selectedOptionElement = options[selectedOption];
-                selectedOptionElement.classList.add('incorrect');
+                if (selectedOptionElement) {
+                    selectedOptionElement.classList.add('incorrect');
+                }
             }
             
             const isCorrect = selectedOption === data.correct;
@@ -1239,10 +1243,13 @@
         }
         
         function markQuestionAnswered(category, points) {
-            // Use targeted selector instead of querying all cells
-            const cell = document.querySelector(`.question-cell[data-category="${category}"][data-points="${points}"]`);
-            if (cell) {
-                cell.classList.add('answered');
+            // Use targeted selector with safer attribute matching
+            const cells = document.querySelectorAll('.question-cell');
+            for (const cell of cells) {
+                if (cell.dataset.category === category && cell.dataset.points === points) {
+                    cell.classList.add('answered');
+                    break;
+                }
             }
         }
         
@@ -1287,11 +1294,12 @@
                     markQuestionAnswered(category, points);
                 });
             }
-        }
-        
-        window.onclick = function(event) {
-            if (event.target === cachedElements.questionModal) {
-                closeModal();
+            
+            // Set up modal click handler after caching elements
+            window.onclick = function(event) {
+                if (cachedElements.questionModal && event.target === cachedElements.questionModal) {
+                    closeModal();
+                }
             }
         }
         
