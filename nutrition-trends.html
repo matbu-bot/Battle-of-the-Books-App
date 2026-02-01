@@ -417,7 +417,7 @@
             // Generate 5 posts
             postTemplates.forEach((template, index) => {
                 const randomTopic = allTopics[Math.floor(Math.random() * allTopics.length)];
-                const postContent = template.template(randomTopic.toLowerCase());
+                const postContent = template.template(randomTopic);
                 
                 const postCard = document.createElement('div');
                 postCard.className = 'post-card';
@@ -427,7 +427,7 @@
                     <div class="post-platform">📱 ${template.platform}</div>
                     <div class="post-content">${postContent}</div>
                     <div class="post-hashtags">${template.hashtags}</div>
-                    <button class="copy-button" onclick="copyPost(this, ${index})">📋 Copy Post</button>
+                    <button class="copy-button" onclick="copyPost(this)">📋 Copy Post</button>
                 `;
                 
                 container.appendChild(postCard);
@@ -439,7 +439,7 @@
             container.innerHTML = keyInsights.map(insight => `<li>${insight}</li>`).join('');
         }
 
-        function copyPost(button, index) {
+        function copyPost(button) {
             const postCard = button.parentElement;
             const platform = postCard.querySelector('.post-platform').textContent;
             const content = postCard.querySelector('.post-content').textContent;
@@ -465,10 +465,13 @@
             // Add a slight variation to engagement numbers to simulate new data
             for (const platform in trendingData) {
                 trendingData[platform].forEach(item => {
-                    const currentValue = parseInt(item.engagement);
-                    const variation = Math.floor(Math.random() * 10) - 5;
-                    const newValue = Math.max(1, currentValue + variation);
-                    item.engagement = item.engagement.replace(/[\d.]+/, newValue);
+                    const match = item.engagement.match(/[\d.]+/);
+                    if (match) {
+                        const currentValue = parseFloat(match[0]);
+                        const variation = Math.floor(Math.random() * 10) - 5;
+                        const newValue = Math.max(1, currentValue + variation);
+                        item.engagement = item.engagement.replace(/[\d.]+/, newValue);
+                    }
                 });
             }
             
