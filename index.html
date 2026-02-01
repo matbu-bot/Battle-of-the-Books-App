@@ -1107,10 +1107,16 @@
         let selectedOption = null;
         let answered = false;
         
+        // Cache DOM elements for better performance
+        let cachedElements = {};
+        
         function initializeGame() {
             const grid = document.getElementById('questionsGrid');
             const categories = Object.keys(gameData);
             const points = ['100', '200', '300', '400', '500', '600', '700', '800', '900', '1000'];
+            
+            // Use DocumentFragment to avoid multiple reflows
+            const fragment = document.createDocumentFragment();
             
             points.forEach(point => {
                 categories.forEach(category => {
@@ -1120,9 +1126,29 @@
                     cell.onclick = () => openQuestion(category, point);
                     cell.dataset.category = category;
                     cell.dataset.points = point;
-                    grid.appendChild(cell);
+                    fragment.appendChild(cell);
                 });
             });
+            
+            grid.appendChild(fragment);
+            
+            // Cache frequently accessed DOM elements
+            cachedElements = {
+                modalTitle: document.getElementById('modalTitle'),
+                questionText: document.getElementById('questionText'),
+                resultMessage: document.getElementById('resultMessage'),
+                submitBtn: document.getElementById('submitBtn'),
+                answersContainer: document.getElementById('answersContainer'),
+                questionModal: document.getElementById('questionModal'),
+                scoreDisplay: document.getElementById('score')
+            };
+            
+            // Set up modal click handler after caching elements
+            window.onclick = function(event) {
+                if (cachedElements.questionModal && event.target === cachedElements.questionModal) {
+                    closeModal();
+                }
+            };
             
             loadGameState();
         }
@@ -1136,35 +1162,36 @@
             answered = false;
             const data = gameData[category][points];
             
-            document.getElementById('modalTitle').textContent = category + ' - $' + points;
-            document.getElementById('questionText').textContent = data.question;
-            document.getElementById('resultMessage').classList.remove('show', 'correct-answer', 'incorrect-answer');
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').textContent = 'Submit Answer';
+            // Use cached elements
+            cachedElements.modalTitle.textContent = category + ' - $' + points;
+            cachedElements.questionText.textContent = data.question;
+            cachedElements.resultMessage.classList.remove('show', 'correct-answer', 'incorrect-answer');
+            cachedElements.submitBtn.disabled = false;
+            cachedElements.submitBtn.textContent = 'Submit Answer';
             
-            const container = document.getElementById('answersContainer');
-            container.innerHTML = '';
+            cachedElements.answersContainer.innerHTML = '';
             
             data.options.forEach((option, index) => {
                 const label = document.createElement('label');
                 label.className = 'answer-option';
-                label.innerHTML = `
-                    <input type="radio" name="answer" value="${index}">
-                    ${option}
-                `;
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'answer';
+                radio.value = index;
+                label.appendChild(radio);
+                label.appendChild(document.createTextNode(' ' + option));
+                
+                // Optimize event handling by caching radio reference
                 label.onclick = (e) => {
                     if (e.target.tagName !== 'INPUT') {
-                        const radio = label.querySelector('input');
                         radio.checked = true;
-                        selectedOption = index;
-                    } else {
-                        selectedOption = index;
                     }
+                    selectedOption = index;
                 };
-                container.appendChild(label);
+                cachedElements.answersContainer.appendChild(label);
             });
             
-            document.getElementById('questionModal').style.display = 'flex';
+            cachedElements.questionModal.style.display = 'flex';
         }
         
         function submitAnswer() {
@@ -1180,7 +1207,6 @@
             
             answered = true;
             const data = gameData[currentQuestion.category][currentQuestion.points];
-            const resultMsg = document.getElementById('resultMessage');
             const options = document.querySelectorAll('.answer-option');
             
             // Disable all radio buttons
@@ -1188,54 +1214,61 @@
                 radio.disabled = true;
             });
             
-            options.forEach((option, index) => {
-                if (index === data.correct) {
-                    option.classList.add('correct');
-                } else if (index === selectedOption && selectedOption !== data.correct) {
-                    option.classList.add('incorrect');
+            // Optimize: only modify the correct and selected options
+            const correctOption = options[data.correct];
+            if (correctOption) {
+                correctOption.classList.add('correct');
+            }
+            
+            if (selectedOption !== data.correct) {
+                const selectedOptionElement = options[selectedOption];
+                if (selectedOptionElement) {
+                    selectedOptionElement.classList.add('incorrect');
                 }
-            });
+            }
             
             const isCorrect = selectedOption === data.correct;
             
             if (isCorrect) {
                 score += parseInt(currentQuestion.points);
-                resultMsg.textContent = '✅ Correct! You earned $' + currentQuestion.points;
-                resultMsg.classList.add('correct-answer');
+                cachedElements.resultMessage.textContent = '✅ Correct! You earned $' + currentQuestion.points;
+                cachedElements.resultMessage.classList.add('correct-answer');
             } else {
-                resultMsg.textContent = '❌ Incorrect. The correct answer is: ' + data.options[data.correct];
-                resultMsg.classList.add('incorrect-answer');
+                cachedElements.resultMessage.textContent = '❌ Incorrect. The correct answer is: ' + data.options[data.correct];
+                cachedElements.resultMessage.classList.add('incorrect-answer');
             }
             
             answeredQuestions.add(currentQuestion.id);
             markQuestionAnswered(currentQuestion.category, currentQuestion.points);
             
-            resultMsg.classList.add('show');
-            document.getElementById('submitBtn').textContent = 'Close';
-            document.getElementById('submitBtn').disabled = false;
+            cachedElements.resultMessage.classList.add('show');
+            cachedElements.submitBtn.textContent = 'Close';
+            cachedElements.submitBtn.disabled = false;
             
             updateDisplay();
             saveGameState();
         }
         
         function markQuestionAnswered(category, points) {
+            // Use targeted selector with safer attribute matching
             const cells = document.querySelectorAll('.question-cell');
-            cells.forEach(cell => {
+            for (const cell of cells) {
                 if (cell.dataset.category === category && cell.dataset.points === points) {
                     cell.classList.add('answered');
+                    break;
                 }
-            });
+            }
         }
         
         function closeModal() {
-            document.getElementById('questionModal').style.display = 'none';
+            cachedElements.questionModal.style.display = 'none';
         }
         
         function resetGame() {
             if (confirm('Are you sure you want to reset the game? This will clear all progress.')) {
                 score = 0;
                 answeredQuestions.clear();
-                document.getElementById('score').textContent = '0';
+                cachedElements.scoreDisplay.textContent = '0';
                 document.querySelectorAll('.question-cell').forEach(cell => {
                     cell.classList.remove('answered');
                 });
@@ -1249,7 +1282,7 @@
         }
         
         function updateDisplay() {
-            document.getElementById('score').textContent = score;
+            cachedElements.scoreDisplay.textContent = score;
         }
         
         function loadGameState() {
@@ -1258,7 +1291,7 @@
             
             if (savedScore) {
                 score = parseInt(savedScore);
-                document.getElementById('score').textContent = score;
+                cachedElements.scoreDisplay.textContent = score;
             }
             
             if (savedAnswered) {
@@ -1267,13 +1300,6 @@
                     const [category, points] = id.split('-');
                     markQuestionAnswered(category, points);
                 });
-            }
-        }
-        
-        window.onclick = function(event) {
-            const modal = document.getElementById('questionModal');
-            if (event.target === modal) {
-                closeModal();
             }
         }
         
