@@ -1143,6 +1143,13 @@
                 scoreDisplay: document.getElementById('score')
             };
             
+            // Set up modal click handler after caching elements
+            window.onclick = function(event) {
+                if (cachedElements.questionModal && event.target === cachedElements.questionModal) {
+                    closeModal();
+                }
+            };
+            
             loadGameState();
         }
         
@@ -1293,13 +1300,6 @@
                     const [category, points] = id.split('-');
                     markQuestionAnswered(category, points);
                 });
-            }
-            
-            // Set up modal click handler after caching elements
-            window.onclick = function(event) {
-                if (cachedElements.questionModal && event.target === cachedElements.questionModal) {
-                    closeModal();
-                }
             }
         }
         
